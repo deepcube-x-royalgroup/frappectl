@@ -1,0 +1,30 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # Esegue la sincronizzazione ogni lunedì alle 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync Frappe Upstream
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add Upstream & Sync
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/frappe/frappectl.git || true
+          git fetch upstream
+          git checkout develop
+          git merge upstream/develop --no-edit || (echo "Conflict detected, manual merge required" && exit 1)
+          git push origin develop
